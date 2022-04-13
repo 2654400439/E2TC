@@ -19,6 +19,8 @@ DATA_PATH = [
     ("1", "/home/sunhanwu/datasets/MTA/text/Quakbot"),
     ("1", "/home/sunhanwu/datasets/MTA/text/TrickBot"),
     ("1", "/home/sunhanwu/datasets/MTA/text/Gozi"),
+    ("1", "/home/sunhanwu/datasets/MTA/text/Adware"),
+    ("1", "/home/sunhanwu/datasets/MTA/text/Ransomware"),
     ("0", "/home/sunhanwu/datasets/MTA/text/CTUNone"),
     # ("0", "/home/sunhanwu/datasets/MTA/text/ISCXNone"),
     # ("0", "/home/sunhanwu/datasets/MTA/text/MTANone"),
@@ -27,11 +29,11 @@ DATA_PATH = [
 """
 CICMAlAnal2017 Dataset
 DATA_PATH = [
-    ("0","/home/sunhanwu/datasets/CICMalAnal2017/Adware-Dowgin/text"),
-    ("0", "/home/sunhanwu/datasets/CICMalAnal2017/Ransomware-Charger/text"),
-    ("0", "/home/sunhanwu/datasets/CICMalAnal2017/Scareware-AVforandroid/text"),
-    ("0", "/home/sunhanwu/datasets/CICMalAnal2017/SMSMalware-Nandrobox/text"),
-    ("1", "/home/sunhanwu/datasets/CICMalAnal2017/Benign/text2"),
+    ("1","/home/sunhanwu/datasets/CICMalAnal2017/Adware-Dowgin/text"),
+    ("1", "/home/sunhanwu/datasets/CICMalAnal2017/Ransomware-Charger/text"),
+    ("1", "/home/sunhanwu/datasets/CICMalAnal2017/Scareware-AVforandroid/text"),
+    ("1", "/home/sunhanwu/datasets/CICMalAnal2017/SMSMalware-Nandrobox/text"),
+    ("0", "/home/sunhanwu/datasets/CICMalAnal2017/Benign/text2"),
 ]
 """
 

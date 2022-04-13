@@ -23,10 +23,10 @@ class AutoEncoder(nn.Module):
         self.inputsSize = param['inputSize']
         self.middleSize = param['middleSize']
         self.classNum = param['classNum']
-        self.encode_linear1 = nn.Linear(self.inputsSize, int(self.inputsSize / 2))
-        self.encode_linear2 = nn.Linear(int(self.inputsSize / 2), self.middleSize)
-        self.decode_linear1 = nn.Linear(self.middleSize, int(self.inputsSize / 2))
-        self.decode_linear2 = nn.Linear(int(self.inputsSize / 2), self.inputsSize)
+        self.encode_linear1 = nn.Linear(self.inputsSize, int(self.inputsSize * 2))
+        self.encode_linear2 = nn.Linear(int(self.inputsSize * 2), self.middleSize)
+        self.decode_linear1 = nn.Linear(self.middleSize, int(self.inputsSize * 2))
+        self.decode_linear2 = nn.Linear(int(self.inputsSize * 2), self.inputsSize)
         self.classify = nn.Linear(self.middleSize, self.classNum)
 
     def encode(self, inputs):
@@ -75,26 +75,35 @@ if __name__ == '__main__':
     # hyper param
     batch_size = 128
     lr = 1e-3
-    epoch_size = 20
+    epoch_size = 120
+    botname = "Gozi"
+    normal = "CTUNone"
+    arch = "autoencoder"
+    sample_szie = 580
 
     # model param
     param = {
         'inputSize': 30,
-        'middleSize':10,
+        'middleSize':100,
         'classNum':2
     }
 
-    botname = "Dridex"
-    normal = "CTUNone"
-    arch = "autoencoder"
+
+    total_size = sample_szie * 2
+    test_size = int(total_size * 0.2)
+    train_size = int((total_size - test_size) * 0.8)
+    valid_size = total_size - test_size - train_size
+    print("train data: {}".format(train_size))
+    print("valid data: {}".format(valid_size))
+    print("test data: {}".format(test_size))
 
     # use GPU if it is available, oterwise use cpu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # pre the dataloader
     # c2data = CollectionDataset('../adversarialData/collectionData.npy', sequence_len=40)
-    c2data = C2Data(botname, number=8000, sequenceLen=30)
-    train_valid_data, test_data = torch.utils.data.random_split(c2data, [12800, 3200])
-    train_data, valid_data = torch.utils.data.random_split(train_valid_data, [10000, 2800])
+    c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    train_valid_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
+    train_data, valid_data = torch.utils.data.random_split(train_valid_data, [train_size, valid_size])
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)

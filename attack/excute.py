@@ -36,10 +36,11 @@ def executeAttack(dataloader, model, device, file):
 
 
 
-def attackFsnet(theta, gamma, file, advdataFile, modelfile):
+def attackFsnet(theta, gamma, file, advdataFile, modelfile, device):
     state = torch.load(modelfile)
     fsnet = FSNet(state['param'])
     fsnet.load_state_dict(state['model_dict'])
+    fsnet.to(device)
 
     # adversarial data
     batch_size = 128
@@ -52,6 +53,8 @@ def attackFsnet(theta, gamma, file, advdataFile, modelfile):
     y_true = []
     y_pred = []
     for batch_x, batch_y in tqdm(adversarialDataloader):
+        batch_x = batch_x.to(device)
+        batch_y = batch_y.to(device)
         # batch_x.shape: (batch_size, sequenceLen)
         # batch_y.shape: (batch_size, 1)
         # reconstruction
@@ -75,8 +78,8 @@ def attackFsnet(theta, gamma, file, advdataFile, modelfile):
         # batch_y.shape=(batch, )
 
         # compute FPR
-        y_true += batch_y.data.numpy().reshape(-1).tolist()
-        y_pred += torch.argmax(z_dense, dim=1).data.numpy().tolist()
+        y_true += batch_y.detach().cpu().data.numpy().reshape(-1).tolist()
+        y_pred += torch.argmax(z_dense, dim=1).detach().cpu().data.numpy().tolist()
     acc = accuracy_score(y_true, y_pred)
     recall = recall_score(y_true, y_pred, average='macro')
     f1 = f1_score(y_true, y_pred, average='macro')

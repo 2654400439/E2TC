@@ -57,29 +57,43 @@ class DNN(nn.Module):
 
 if __name__ == '__main__':
     # hyper param
-    epoch_size=200
-    batch_size = 16
+    epoch_size=40
+    batch_size = 128
     lr = 1e-4
 
     # model param
     param = {
-        "input_size": 40,
+        "input_size": 30,
         "num_class": 2
     }
 
-    botname = "Tofsee"
+    sample_szie = 500
+    botname = "Gozi"
     normal = "CTUNone"
     arch = "dnn"
 
+    total_size = sample_szie * 2
+    test_size = int(total_size * 0.2)
+    train_size = int((total_size - test_size) * 0.8)
+    valid_size = total_size - test_size - train_size
+    print("train data: {}".format(train_size))
+    print("valid data: {}".format(valid_size))
+    print("test data: {}".format(test_size))
 
     # use GPU if it is available, oterwise use cpu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # pre the dataloader
-    c2data = C2Data(botname)
+    # c2data = C2Data(botname)
     # c2data = CollectionDataset('../adversarialData/collectionData.npy')
-    train_valid_data, test_data = torch.utils.data.random_split(c2data, [200, 200])
-    train_data, valid_data = torch.utils.data.random_split(train_valid_data, [100, 100])
+    # train_valid_data, test_data = torch.utils.data.random_split(c2data, [200, 200])
+    # train_data, valid_data = torch.utils.data.random_split(train_valid_data, [100, 100])
+    # train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    # valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    # test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    train_valid_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
+    train_data, valid_data = torch.utils.data.random_split(train_valid_data, [train_size, valid_size])
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)

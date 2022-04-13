@@ -8,8 +8,8 @@ import multiprocessing as mp
 
 # data path config dict
 DATA_PATH = {
-    'text': "/home/sunhanwu/datasets/MTA/text/Gozi",
-    'pcap': "/home/sunhanwu/datasets/MTA/labeldata/Gozi"
+    'text': "/home/sunhanwu/datasets/MTA/text/Ransomware",
+    'pcap': "/home/sunhanwu/datasets/MTA/labeldata/Ransomware"
 }
 
 # tshark config dict

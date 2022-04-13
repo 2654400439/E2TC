@@ -17,7 +17,11 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
 import numpy as np
 from warnings import filterwarnings
+import os
 filterwarnings("ignore")
+
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 
@@ -189,10 +193,11 @@ def computeFPR_(y_pred, y_target):
 
 if __name__ == '__main__':
     # hyper param
-    epoch_size = 10
+    epoch_size = 40
     lr = 1e-3
     batch_size= 128
-    botname = "Dridex"
+    sample_szie = 200
+    botname = "Ransomware"
     normal = "CTUNone"
     arch = "fsnet"
 
@@ -207,14 +212,21 @@ if __name__ == '__main__':
         "num_direction": 2,
         "num_class":  2,
     }
+    total_size = sample_szie * 2
+    test_size = int(total_size * 0.2)
+    train_size = int((total_size - test_size) * 0.8)
+    valid_size = total_size - test_size - train_size
+    print("train data: {}".format(train_size))
+    print("valid data: {}".format(valid_size))
+    print("test data: {}".format(test_size))
 
     # use GPU if it is available, oterwise use cpu
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # pre the dataloader
-    c2data = C2Data(botname, number=8000, sequenceLen=30)
-    train_valid_data, test_data = torch.utils.data.random_split(c2data, [12800, 3200])
-    train_data, valid_data = torch.utils.data.random_split(train_valid_data, [10000, 2800])
+    c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    train_valid_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
+    train_data, valid_data = torch.utils.data.random_split(train_valid_data, [train_size, valid_size])
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)
