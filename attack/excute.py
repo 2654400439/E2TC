@@ -88,5 +88,6 @@ def attackFsnet(theta, gamma, file, advdataFile, modelfile, device):
     print(con_matrix)
     print("acc: {:.2%}, recall: {:.2%}, f1: {:.2%}".format(acc, recall, f1), file=file)
     print(con_matrix, file=file)
+    return con_matrix
 
 

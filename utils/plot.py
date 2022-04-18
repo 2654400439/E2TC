@@ -60,7 +60,84 @@ def plt_edr():
     plt.xticks(x+width, families)
     plt.show()
 
+def plot_edr_gamma():
+    plt.figure(dpi=100, figsize=(24, 8))
+    truncate = 80
+    rnn_fsnet_quackbot = np.load("../rnn_fsnet_Quakbot_edr_gamma_list.npy")[:truncate]
+    rnn_fsnet_TrickBot = np.load("../rnn_fsnet_TrickBot_edr_gamma_list.npy")[:truncate]
+    dnn_fsnet_TrickBot = np.load("../dnn_fsnet_TrickBot_edr_gamma_list.npy")[:truncate]
+    autoencoder_fsnet_TrickBot = np.load("../autoencoder_fsnet_TrickBot_edr_gamma_list.npy")[:truncate]
+
+    plt.plot([x[0] for x in dnn_fsnet_TrickBot], [x[1] for x in dnn_fsnet_TrickBot], label="Quakbot:dnn edr",
+             marker='s', color='#00B04E', linestyle='-', markersize=3, linewidth='1')
+    plt.plot([x[0] for x in dnn_fsnet_TrickBot], [x[2] for x in dnn_fsnet_TrickBot], label="Quakbot:fsnet edr",
+             marker="*", color="#00B04E", linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in autoencoder_fsnet_TrickBot], [x[1] for x in autoencoder_fsnet_TrickBot], label="TrickBot:autoencoder edr",
+             marker='s', color='#F7921E', linestyle='-', markersize=3, linewidth='1')
+    plt.plot([x[0] for x in autoencoder_fsnet_TrickBot], [x[2] for x in autoencoder_fsnet_TrickBot], label="TrickBot:fsnet edr",
+             marker="*", color="#F7921E", linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_fsnet_TrickBot], [x[1] for x in rnn_fsnet_TrickBot], label="TrickBot:rnn edr",
+             marker='s', color='red', linestyle='-', markersize=3, linewidth='1')
+    plt.plot([x[0] for x in rnn_fsnet_TrickBot], [x[2] for x in rnn_fsnet_TrickBot], label="TrickBot:fsnet edr",
+             marker="*", color="red", linestyle='-.', markersize=3, linewidth='1')
+    plt.legend()
+    plt.show()
+
+def plot_edr_targets():
+    """
+
+    :return:
+    """
+    plt.figure(dpi=100, figsize=(24, 8))
+    truncate = 80
+    # todo: 需要补充rnn和autoencoder作为替代模型的迁移攻击下效果
+    rnn_fsnet_TrickBot = np.load("../rnn_fsnet_TrickBot_edr_gamma_list.npy")[:truncate]
+    rnn_svm_TrickBot = np.load("../rnn_svm_TrickBot_edr_gamma_list.npy")[:truncate]
+    rnn_lr_TrickBot = np.load("../rnn_lr_TrickBot_edr_gamma_list.npy")[:truncate]
+    rnn_dt_TrickBot = np.load("../rnn_dt_TrickBot_edr_gamma_list.npy")[:truncate]
+    rnn_rf_TrickBot = np.load("../rnn_rf_TrickBot_edr_gamma_list.npy")[:truncate]
+    rnn_knn_TrickBot = np.load("../rnn_knn_TrickBot_edr_gamma_list.npy")[:truncate]
+    rnn_dnn_TrickBot = np.load("../rnn_dnn_TrickBot_edr_gamma_list.npy")[:truncate]
+    rnn_lstm_TrickBot = np.load("../rnn_lstm_TrickBot_edr_gamma_list.npy")[:truncate]
+
+
+    plt.plot([x[0] for x in rnn_fsnet_TrickBot], [x[1] for x in rnn_fsnet_TrickBot], label="TrickBot:rnn edr",
+             marker='s', color='red', linestyle='-', markersize=3, linewidth='1')
+    plt.plot([x[0] for x in rnn_fsnet_TrickBot], [x[2] for x in rnn_fsnet_TrickBot], label="TrickBot:fsnet edr",
+             marker="*", color="blue", linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_svm_TrickBot], [x[1] for x in rnn_svm_TrickBot], label="TrickBot:svm edr",
+             marker='s', color='green', linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_lr_TrickBot], [x[1] for x in rnn_lr_TrickBot], label="TrickBot:lr edr",
+             marker='s', color='yellow', linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_dt_TrickBot], [x[1] for x in rnn_dt_TrickBot], label="TrickBot:dt edr",
+             marker='s', color='cyan', linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_rf_TrickBot], [x[1] for x in rnn_rf_TrickBot], label="TrickBot:rf edr",
+             marker='s', color='magenta', linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_knn_TrickBot], [x[1] for x in rnn_knn_TrickBot], label="TrickBot:knn edr",
+             marker='s', color='purple', linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_dnn_TrickBot], [x[1] for x in rnn_dnn_TrickBot], label="TrickBot:dnn edr",
+             marker='s', color='brown', linestyle='-.', markersize=3, linewidth='1')
+
+    plt.plot([x[0] for x in rnn_lstm_TrickBot], [x[1] for x in rnn_lstm_TrickBot], label="TrickBot:lstm edr",
+             marker='s', color='olive', linestyle='-.', markersize=3, linewidth='1')
+    plt.legend()
+    # todo: 需要仔细商榷
+    plt.title("")
+    plt.xlabel("")
+    plt.ylabel("")
+    plt.savefig("../fig/test1.eps", dpi=200, format='eps')
+    plt.show()
 
 if __name__ == '__main__':
-    plt_edr()
+    # plt_edr()
     # plt_f1()
+    # plot_edr_gamma()
+    plot_edr_targets()

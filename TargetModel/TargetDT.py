@@ -18,7 +18,7 @@ class TargetDT():
     """
 
     """
-    def __init__(self):
+    def __init__(self, param=None):
         # 正则化
         self.clf = tree.DecisionTreeClassifier()
 

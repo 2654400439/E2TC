@@ -56,7 +56,8 @@ class TargetSVM():
 
 if __name__ == '__main__':
     param = {
-        'kernel': 'rbf'
+        'kernel': 'rbf',
+
     }
 
     arch = "svm"
