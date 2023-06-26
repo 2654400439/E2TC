@@ -13,6 +13,7 @@ from TargetModel.TargetLR import TargetLR
 from TargetModel.TargetDT import TargetDT
 from TargetModel.TargetRF import TargetRF
 from TargetModel.TargetKNN import TargetKNN
+from TargetModel.TargetLSTM import TargetLSTM
 from torch.utils.data import DataLoader
 
 def attackDLModel(model, dataloader, device, batch_size=128):
@@ -56,21 +57,25 @@ def attackMLModel(model, dataloader):
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    targetArch = "knn"
-    surrogateArch = "rnn"
+    targetArch = "lstm"
+    surrogateArch = "lstm"
     botname = "Gozi"
-    normal = "CTUNone"
+    theta = 0.01
+    gamma = 0.1
+    times = 20
     target_class=0
-    targetModelFile = "../modelFile/target_{}_{}_{}.pkt".format(targetArch, botname, normal)
-    adverDataFile = "../adversarialData/advdata_{}_{}_{}_5_160.0_20.npy".format(surrogateArch, botname, normal)
+    targetModelFile = "../modelFile/target_mta_cicflowmeter_{}_{}.pkt".format(targetArch, botname)
+    adverDataFile = "../adversarialData/advdata_mta_cicflowmeter_{}_{}_{}_{}_{}.npy".format(surrogateArch, botname, theta, gamma, times)
     advdata = AdversarialC2Data(adverDataFile, target_class)
     advdataloader = DataLoader(advdata, batch_size=128, shuffle=True, drop_last=False)
-    param = {
-        'n_neighbors': 6,
-    }
-    targetModel = TargetKNN(param)
-    targetModel.load(targetModelFile)
-    attackMLModel(targetModel, advdataloader)
+
+    print("Load adv model: {}".format(targetModelFile))
+    adv_state = torch.load(targetModelFile)
+    print("model param: {}".format(adv_state['param']))
+    targetModel = TargetLSTM(adv_state['param'])
+    targetModel.load_state_dict(adv_state['model_dict'])
+    targetModel.to(device)
+    attackDLModel(targetModel, advdataloader, device, batch_size=128)
 
 
 

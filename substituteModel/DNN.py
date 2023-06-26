@@ -8,7 +8,9 @@ import torch
 import ipdb
 from torch import nn
 from TargetModel.FSNet.dataset import C2Data
+from utils.CICIDSData import CICIDS
 from attack.collectionDataset import CollectionDataset
+from utils.CICIDSData import dataconfig
 from torch.utils.data import DataLoader
 from TargetModel.FSNet.train import computeFPR
 from TargetModel.FSNet.utils import save_model
@@ -55,24 +57,27 @@ class DNN(nn.Module):
         # inputs.shape = (batch_size, num_class)
         return inputs
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def train(name):
     # hyper param
-    epoch_size=40
+    epoch_size= 20
     batch_size = 128
     lr = 1e-4
 
     # model param
     param = {
-        "input_size": 30,
+        "input_size": 77,
         "num_class": 2
     }
 
-    sample_szie = 500
-    botname = "Gozi"
-    normal = "CTUNone"
+    cicids = CICIDS(name)
+    sample_szie = len(cicids)
+    # botname = "Gozi"
+    botname = name
+    # normal = "CTUNone"
     arch = "dnn"
 
-    total_size = sample_szie * 2
+    total_size = sample_szie
     test_size = int(total_size * 0.2)
     train_size = int((total_size - test_size) * 0.8)
     valid_size = total_size - test_size - train_size
@@ -91,8 +96,7 @@ if __name__ == '__main__':
     # train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
     # valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
     # test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)
-    c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
-    train_valid_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
+    train_valid_data, test_data = torch.utils.data.random_split(cicids, [train_size + valid_size, test_size])
     train_data, valid_data = torch.utils.data.random_split(train_valid_data, [train_size, valid_size])
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
@@ -210,5 +214,186 @@ if __name__ == '__main__':
         'lr': lr,
         'batch_size': batch_size
     }
-    filename = "../modelFile/subtitute_{}_{}_{}.pkt".format(arch, botname, normal)
+    filename = "../modelFile/proxy_mta_length_{}_{}.pkt".format(arch, botname)
     save_model(dnn, adam, param, hyper, FPR, filename)
+
+def trainMTa(botname, arch, sample_size, feature_type='length'):
+    # hyper param
+    epoch_size= 20
+    batch_size = 128
+    lr = 1e-4
+
+    # model param
+    param = {
+        "input_size": 80,
+        "num_class": 2
+    }
+
+    cicids = C2Data(botname, number=sample_size, sequenceLen=80, feature_type=feature_type)
+    sample_szie = len(cicids)
+    # botname = "Gozi"
+    botname = botname
+    # normal = "CTUNone"
+    arch = "dnn"
+
+    total_size = sample_szie
+    test_size = int(total_size * 0.2)
+    train_size = int((total_size - test_size) * 0.8)
+    valid_size = total_size - test_size - train_size
+    print("train data: {}".format(train_size))
+    print("valid data: {}".format(valid_size))
+    print("test data: {}".format(test_size))
+
+    # use GPU if it is available, oterwise use cpu
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # pre the dataloader
+    # c2data = C2Data(botname)
+    # c2data = CollectionDataset('../adversarialData/collectionData.npy')
+    # train_valid_data, test_data = torch.utils.data.random_split(c2data, [200, 200])
+    # train_data, valid_data = torch.utils.data.random_split(train_valid_data, [100, 100])
+    # train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    # valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    # test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    train_valid_data, test_data = torch.utils.data.random_split(cicids, [train_size + valid_size, test_size])
+    train_data, valid_data = torch.utils.data.random_split(train_valid_data, [train_size, valid_size])
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)
+
+    # model
+
+    dnn = DNN(param)
+    dnn.to(device)
+
+    # loss func
+    crossEntropy = torch.nn.CrossEntropyLoss()
+    adam = torch.optim.Adam(dnn.parameters(), lr=lr)
+    # lossFunc = torch.nn.KLDivLoss()
+
+    # trainning
+    for i in range(epoch_size):
+        dnn.train()
+        loss_list = []
+        acc_list = []
+        recall_list = []
+        f1_list = []
+        for batch_x, batch_y in tqdm(train_loader):
+            batch_x = batch_x.to(device, dtype=torch.float)
+            batch_y = batch_y.to(device)
+            output = dnn(batch_x)
+            # output.shape = (batch_size, sequence, num_class)
+            acc, recall, f1 = computeFPR(y_pred=output, y_target=batch_y)
+            # ipdb.set_trace()
+            batch_y = batch_y.squeeze()
+            # batch_y = F.softmax(batch_y)
+            # output = F.softmax(output)
+            loss = crossEntropy(output, batch_y)
+
+            acc_list.append(acc)
+            recall_list.append(recall)
+            f1_list.append(f1)
+            loss_list.append(loss.item())
+
+            adam.zero_grad()
+            loss.backward()
+            adam.step()
+        print("[Training {:03d}] acc: {:.2%}, recall: {:.2%}, f1: {:.2%}, loss: {:.2f}".format(i + 1,
+                                                                                               np.mean(acc_list),
+                                                                                               np.mean(recall_list),
+                                                                                               np.mean(f1_list),
+                                                                                               np.mean(loss_list)))
+
+        # validing
+        dnn.eval()
+        loss_list = []
+        acc_list = []
+        recall_list = []
+        f1_list = []
+        for batch_x, batch_y in valid_loader:
+            batch_x = batch_x.to(device, dtype=torch.float)
+            batch_y = batch_y.to(device)
+            output = dnn(batch_x)
+            # output.shape = (batch_size, sequence, num_class)
+            acc, recall, f1 = computeFPR(y_pred=output, y_target=batch_y)
+            batch_y = batch_y.squeeze()
+            # batch_y = F.softmax(batch_y)
+            # output = F.softmax(output)
+            loss = crossEntropy(output, batch_y)
+
+            acc_list.append(acc)
+            recall_list.append(recall)
+            f1_list.append(f1)
+            loss_list.append(loss.item())
+        print("[Validing {:03d}] acc: {:.2%}, recall: {:.2%}, f1: {:.2%}, loss: {:.2f}".format(i + 1,
+                                                                                               np.mean(acc_list),
+                                                                                               np.mean(recall_list),
+                                                                                               np.mean(f1_list),
+                                                                                               np.mean(loss_list)))
+
+    # testing
+    dnn.eval()
+    loss_list = []
+    acc_list = []
+    recall_list = []
+    f1_list = []
+    y_true = []
+    y_pred = []
+    for batch_x, batch_y in test_loader:
+        batch_x = batch_x.to(device, dtype=torch.float)
+        batch_y = batch_y.to(device)
+        output = dnn(batch_x)
+        # output.shape = (batch_size, sequence, num_class)
+        acc, recall, f1 = computeFPR(y_pred=output, y_target=batch_y)
+        batch_y = batch_y.squeeze()
+        # batch_y = F.softmax(batch_y)
+        # output = F.softmax(output)
+        loss = crossEntropy(output, batch_y)
+
+        acc_list.append(acc)
+        recall_list.append(recall)
+        f1_list.append(f1)
+        loss_list.append(loss.item())
+        y_true += batch_y.detach().cpu().numpy().tolist()
+        y_pred += torch.argmax(output, dim=1).detach().cpu().numpy().tolist()
+    print("[Testing {:03d}] acc: {:.2%}, recall: {:.2%}, f1: {:.2%}, loss: {:.2f}".format(i + 1,
+                                                                                          np.mean(acc_list),
+                                                                                          np.mean(recall_list),
+                                                                                          np.mean(f1_list),
+                                                                                          np.mean(loss_list)))
+    print(confusion_matrix(y_true, y_pred))
+    # FPR = {
+    #     'acc': np.mean(acc_list),
+    #     'recall': np.mean(recall_list),
+    #     'f1': np.mean(f1_list),
+    #     'metrix': confusion_matrix(y_true,y_pred)
+    # }
+    # hyper = {
+    #     'epoch_size': epoch_size,
+    #     'lr': lr,
+    #     'batch_size': batch_size
+    # }
+    # filename = "../modelFile/proxy_mta_{}_{}_{}.pkt".format(feature_type, arch, botname)
+    # save_model(dnn, adam, param, hyper, FPR, filename)
+    return dnn
+
+if __name__ == '__main__':
+    malwares = [
+        "Botnet",
+        "Fuzzing",
+        "PortScan",
+        "BruteForce",
+        "DDoS"
+    ]
+    Botnets = [
+        "Tofsee",
+        "Dridex",
+        "Quakbot",
+        "TrickBot",
+        "Gozi"
+    ]
+    numbers = [20000, 8000, 700, 650, 580]
+    for i in range(5):
+        print(Botnets)
+        trainMTa(Botnets[i], arch='dnn', sample_size=numbers[i], feature_type='length')
+        break

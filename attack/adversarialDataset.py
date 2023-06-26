@@ -12,7 +12,7 @@ class AdversarialC2Data(Dataset):
     """
     adversarial sample for attack
     """
-    def __init__(self, filename, target_class=5, keep_target=True):
+    def __init__(self, filename, target_class=5, keep_target=True, norm=False):
         """
 
         :param filename:
@@ -20,6 +20,8 @@ class AdversarialC2Data(Dataset):
         :param keep_target: Whether to keep target data
         """
         data = np.load(filename)
+        if norm:
+            data[:,:-1] = (data[:,:-1] - np.min(data[:,:-1], axis=0)) / (np.max(data[:,:-1], axis=0) - np.min(data[:,:-1], axis=0)) + 1e-9
         print("Adversarial Dataset Load: {}".format(filename))
         if keep_target:
             self.data = data

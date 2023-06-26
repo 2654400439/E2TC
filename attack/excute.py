@@ -29,8 +29,8 @@ def executeAttack(dataloader, model, device, file):
     con_matrix = confusion_matrix(y_true, y_pred)
     print("acc: {:.2%}, recall: {:.2%}, f1: {:.2%}".format(acc, recall, f1))
     print(con_matrix)
-    print("acc: {:.2%}, recall: {:.2%}, f1: {:.2%}".format(acc, recall, f1), file=file)
-    print(con_matrix, file=file)
+    # print("acc: {:.2%}, recall: {:.2%}, f1: {:.2%}".format(acc, recall, f1), file=file)
+    # print(con_matrix, file=file)
     return acc, recall, f1, con_matrix
 
 

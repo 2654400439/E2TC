@@ -110,6 +110,7 @@ def labelBySHA1(filename, blackListDict: dict, dataset="MTA"):
     label = "Normal"
     for item in sha1List:
         if item in blackListDict.keys():
+            print(filename)
             label = blackListDict[item]
             print("{}:{}".format(filename, label))
 
@@ -119,14 +120,14 @@ def labelBySHA1(filename, blackListDict: dict, dataset="MTA"):
 if __name__ == '__main__':
     # blackList = loadSSLBlackList('./sslblacklist.csv')
     # filenames = [os.path.join("/home/sunhanwu/datasets/MTA-bot-2014/flows/", x) for x in os.listdir("/home/sunhanwu/datasets/MTA/flows/")]
-    # for file in filenames:
+    # for file in tqdm(filenames):
     #     labelBySHA1(file, blackList)
-    # parseFingerprinnt('/home/sunhanwu/datasets/MTA/labeldata/Adware/100.pcap')
+    # print(parseFingerprinnt('/home/sunhanwu/datasets/MTA/labeldata/Adware/100.pcap'))
     # splitFlows("/home/sunhanwu/datasets/MTA/pcaps/", "/home/sunhanwu/datasets/MTA/flows2")
     filenames = [os.path.join("/home/sunhanwu/datasets/MTA/flows2/", x) for x in os.listdir("/home/sunhanwu/datasets/MTA/flows2/")]
     family_sta = {}
     blackListDict = loadBlackList("./ja3_fingerprints.csv")
-    for file in tqdm(filenames):
+    for file in tqdm(filenames[:200]):
     # for file in filenames:
         family = labelByJa3(file, blackListDict, dataset="MTA")
         if family in family_sta.keys():

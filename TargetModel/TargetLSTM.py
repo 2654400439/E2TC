@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from TargetModel.FSNet.train import computeFPR
 from TargetModel.FSNet.utils import save_model
 from sklearn.metrics import confusion_matrix
+from utils.MTACICFlowMeter import MTACICFlowMeter
 import numpy as np
 from tqdm import tqdm
 import torch.nn.functional as F
@@ -63,7 +64,7 @@ class TargetLSTM(nn.Module):
 
 if __name__ == '__main__':
     # hyper param
-    epoch_size=100
+    epoch_size=40
     batch_size = 128
     lr = 1e-4
 
@@ -73,13 +74,21 @@ if __name__ == '__main__':
         "emb_dim": 64,
         "hidden_size": 64,
         "num_class": 2,
-        "sequence_len": 30,
+        "sequence_len": 76,
         "num_layers": 2,
         "num_direction": 2
     }
-
-    sample_szie = 580
-    botname = "Gozi"
+    index = 4
+    Botnets = [
+        "Tofsee",
+        "Dridex",
+        "Quakbot",
+        "TrickBot",
+        "Gozi"
+    ]
+    numbers = [2580, 2580, 1600, 690, 1250]
+    sample_szie = numbers[index]
+    botname = Botnets[index]
     normal = "CTUNone"
     arch = "lstm"
 
@@ -95,7 +104,8 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # pre the dataloader
-    c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    # c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    c2data = MTACICFlowMeter(botname, number=sample_szie)
     train_valid_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
     train_data, valid_data = torch.utils.data.random_split(train_valid_data, [train_size, valid_size])
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
@@ -214,5 +224,5 @@ if __name__ == '__main__':
         'lr': lr,
         'batch_size': batch_size
     }
-    filename = "../modelFile/target_{}_{}_{}.pkt".format(arch, botname, normal)
+    filename = "../modelFile/proxy_mta_cicflowmeter_{}_{}.pkt".format(arch, botname)
     save_model(dnn, adam, param, hyper, FPR, filename)

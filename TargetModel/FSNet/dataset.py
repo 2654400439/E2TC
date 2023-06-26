@@ -19,8 +19,8 @@ DATA_PATH = [
     ("1", "/home/sunhanwu/datasets/MTA/text/Quakbot"),
     ("1", "/home/sunhanwu/datasets/MTA/text/TrickBot"),
     ("1", "/home/sunhanwu/datasets/MTA/text/Gozi"),
-    ("1", "/home/sunhanwu/datasets/MTA/text/Adware"),
-    ("1", "/home/sunhanwu/datasets/MTA/text/Ransomware"),
+    # ("1", "/home/sunhanwu/datasets/MTA/text/Adware"),
+    # ("1", "/home/sunhanwu/datasets/MTA/text/Ransomware"),
     ("0", "/home/sunhanwu/datasets/MTA/text/CTUNone"),
     # ("0", "/home/sunhanwu/datasets/MTA/text/ISCXNone"),
     # ("0", "/home/sunhanwu/datasets/MTA/text/MTANone"),
@@ -38,7 +38,7 @@ DATA_PATH = [
 """
 
 class C2Data(Dataset):
-    def __init__(self, botname, number=200, sequenceLen=40):
+    def __init__(self, botname, number=200, sequenceLen=40, feature_type='length'):
         self.data = []
         for label, datapath in DATA_PATH:
             if label == "1" and (botname not in datapath):
@@ -47,6 +47,10 @@ class C2Data(Dataset):
             label = int(label)
             self.data += self.getSequenceData(datapath, label, number, sequenceLen)
         print("Total Number: {}".format(len(self.data)))
+
+    def getSequenceTime(self, datapath, label, number, sequenceLen):
+        """用于读取时间间隔序列"""
+        pass
 
     def getSequenceData(self, datapath, label, number, sequenceLen):
         """

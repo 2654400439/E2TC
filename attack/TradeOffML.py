@@ -12,7 +12,9 @@ from TargetModel.TargetDT import TargetDT
 from TargetModel.TargetRF import TargetRF
 from TargetModel.TargetKNN import TargetKNN
 from TargetModel.TargetDNN import TargetDNN
+from TargetModel.TargetIF import TargetIF
 from TargetModel.TargetLSTM import TargetLSTM
+from TargetModel.FSNet.FSNet import FSNet
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 import numpy as np
@@ -29,7 +31,10 @@ def attackGammaML(sur_arch, target_arch, botname, normal, gamma: float):
     batch_size = 128
     target_class = 0
     advdata_file = "../adversarialData/advdata_{}_{}_{}_5_{}.0_20.npy".format(sur_arch, botname, normal, int(gamma))
-    target_model_file = "../modelFile/target_{}_{}_{}.pkt".format(target_arch, botname, normal)
+    if target_arch == 'if':
+        target_model_file = "../modelFile/target_mta_length_{}_{}.pkt".format(target_arch, botname)
+    else:
+        target_model_file = "../modelFile/target_{}_{}_{}.pkt".format(target_arch, botname, normal)
     target_model = None
     param = {
         'kernel': 'rbf',
@@ -37,7 +42,8 @@ def attackGammaML(sur_arch, target_arch, botname, normal, gamma: float):
         'criterion': 'gini',
         'n_estimators': 10,
         'max_depth': 10,
-        'n_neighbors': 10
+        'n_neighbors': 10,
+        'outliers_fraction1': 0.2,
     }
     target_model = globals()["Target{}".format(target_arch.upper())](param)
     target_model.load(target_model_file)
@@ -46,7 +52,7 @@ def attackGammaML(sur_arch, target_arch, botname, normal, gamma: float):
     y_true, y_pred = target_model.eval(adv_loader)
     con_metrix = confusion_matrix(y_true, y_pred)
     print("confusion_metrix: \n{}".format(con_metrix))
-    EDR = con_metrix[0][1] / (con_metrix[0][1] + con_metrix[1][1])
+    EDR = con_metrix[1][0] / (con_metrix[1][0] + con_metrix[1][1])
     return EDR
 
 def attackGammaDL(sur_arch, target_arch, botname, normal, gamma: float):
@@ -57,7 +63,10 @@ def attackGammaDL(sur_arch, target_arch, botname, normal, gamma: float):
     target_model_file = "../modelFile/target_{}_{}_{}.pkt".format(target_arch, botname, normal)
     target_model = None
     state = torch.load(target_model_file)
-    target_model = globals()["Target{}".format(target_arch.upper())](state['param'])
+    if target_arch == 'fsnet':
+        target_model = FSNet(state['param'])
+    else:
+        target_model = globals()["Target{}".format(target_arch.upper())](state['param'])
     target_model.load_state_dict(state['model_dict'])
     target_model.to(device)
     adv_data = AdversarialC2Data(advdata_file, target_class=target_class, keep_target=True)
@@ -85,16 +94,15 @@ def attackGammaDL(sur_arch, target_arch, botname, normal, gamma: float):
 if __name__ == '__main__':
     sur_arch = "rnn"
     target_archs = [
-        'dnn',
-        'lstm'
+        'if'
     ]
     # target_arch = "svm"
-    botname = "TrickBot"
+    botname = "Dridex"
     normal = "CTUNone"
     for target_arch in target_archs:
         EDR_list = []
         for gamma in range(0, 800, 5):
-            edr = attackGammaDL(sur_arch=sur_arch, target_arch=target_arch, botname=botname, normal=normal, gamma=float(gamma))
+            edr = attackGammaML(sur_arch=sur_arch, target_arch=target_arch, botname=botname, normal=normal, gamma=float(gamma))
             EDR_list.append((gamma, edr))
         save_file = "../{}_{}_{}_edr_gamma_list.npy".format(sur_arch, target_arch, botname)
         np.save(save_file, EDR_list)

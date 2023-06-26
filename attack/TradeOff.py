@@ -21,12 +21,12 @@ os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 
-def attackGamma(gamma: float):
+def attackGamma(arch, botname, gamma: float):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # generate(device, 'rnn')
 
-    arch = "autoencoder"
-    botname = "TrickBot"
+    # arch = arch
+    # botname = botname
     normal = "CTUNone"
     target_arch = "fsnet"
     sample_size = 650
@@ -88,7 +88,15 @@ def attackGamma(gamma: float):
 
 if __name__ == '__main__':
     EDR_list = []
-    for gamma in range(0, 800, 5):
-        sur_edr, edr = attackGamma(float(gamma))
-        EDR_list.append((gamma, sur_edr, edr))
-    np.save("../autoencoder_fsnet_TrickBot_edr_gamma_list.npy", EDR_list)
+    Botnets = [
+        "Tofsee",
+        "Dridex",
+        "Quakbot",
+        "TrickBot",
+        "Gozi"
+    ]
+    for botname in Botnets:
+        for gamma in range(0, 800, 5):
+            sur_edr, edr = attackGamma('rnn', botname=botname, gamma= float(gamma))
+            EDR_list.append((gamma, sur_edr, edr))
+        np.save("../rnn_fsnet_{}_edr_gamma_list.npy".format(botname), EDR_list)

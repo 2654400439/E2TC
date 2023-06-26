@@ -1,10 +1,9 @@
 """
 Date: 2022-04-13
 Author: sunhanwu@iie.ac.cn
-Desc: target model: Logistic Regression
+Desc: target model: MLP
 """
-from sklearn.linear_model import LogisticRegression
-from TargetModel.FSNet.dataset import C2Data
+from sklearn.neural_network import MLPClassifier
 import torch
 from sklearn.metrics import confusion_matrix
 import joblib
@@ -14,14 +13,22 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-class TargetLR():
+class TargetMLP():
     """
 
     """
     def __init__(self, param):
         # 正则化
-        self.C = param['C']
-        self.clf = LogisticRegression(C=self.C)
+        self.clf = MLPClassifier(
+            activation=param['activate'],
+            hidden_layer_sizes=param['hidden_size'],
+            learning_rate_init=param['learning_rate_init'],
+            max_iter=param['max_iter'],
+            momentum=param['momentum'],
+            solver=param['solver'],
+            alpha=param['alpha'],
+            batch_size=param['batch_size'],
+        )
 
     def train(self, dataloader):
         X = []
@@ -57,12 +64,18 @@ class TargetLR():
 
 if __name__ == '__main__':
     param = {
-        'C': 0.3
+        'activate': 'relu',
+        'hidden_size': (100, 100),
+        'learning_rate_init': 0.001,
+        'max_iter': 200,
+        'momentum': 0.9,
+        'solver': 'adam',
+        'alpha': 0.01,
+        'batch_size': 128
     }
 
-    arch = "lr"
-    sample_szie = 22000
-    botname = "Tofsee"
+    sample_szie = 580
+    botname = "Gozi"
     normal = "CTUNone"
 
     batch_size = 128
@@ -75,16 +88,16 @@ if __name__ == '__main__':
     print("valid data: {}".format(valid_size))
     print("test data: {}".format(test_size))
 
-    c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
-    train_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
-    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)
-
-    lr = TargetLR(param)
-    lr.train(train_loader)
-    y_true, y_pred = lr.eval(test_loader)
-    print("confusion_metrix: \n{}".format(confusion_matrix(y_true, y_pred)))
-    filename = "../modelfile/target_mta_{}_{}_{}.pkt".format(arch, botname, normal)
-    lr.save(filename)
+    # c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    # train_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
+    # train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    # test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=False)
+    #
+    # svm = TargetLR(param)
+    # svm.train(train_loader)
+    # y_true, y_pred = svm.eval(test_loader)
+    # print("confusion_metrix: \n{}".format(confusion_matrix(y_true, y_pred)))
+    # filename = "../modelFile/target_{}_{}_{}.pkt".format(arch, botname, normal)
+    # svm.save(filename)
 
 

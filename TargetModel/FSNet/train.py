@@ -15,6 +15,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
+from TargetModel.FSNet.MTACICFlowMeter import MTACICFlowMeter
 import numpy as np
 from warnings import filterwarnings
 import os
@@ -63,6 +64,8 @@ def trainModel(epoch_index, model, dataloader, criterrion, optimizer, device):
         # z_reconstruction.shape = (-1, vocab_size)
         batch_x = torch.reshape(batch_x, [-1])
         # batch_x.shape=(-1)
+        # reconstruction_loss = criterrion(z_reconstruction, batch_x)
+        # MTA CICFLowMeter
         reconstruction_loss = criterrion(z_reconstruction, batch_x)
 
         # compute classification loss
@@ -129,7 +132,7 @@ def validModel(epoch_index, model, dataloader, criterrion, device, metrix_flag=F
         # z_reconstruction.shape = (-1, vocab_size)
         batch_x = torch.reshape(batch_x, [-1])
         # batch_x.shape=(-1)
-        reconstruction_loss = criterrion(z_reconstruction, batch_x)
+        reconstruction_loss = torch.nn.MSELoss(z_reconstruction, batch_x)
 
         # compute classification loss
         batch_y = batch_y.squeeze()
@@ -196,15 +199,24 @@ if __name__ == '__main__':
     epoch_size = 40
     lr = 1e-3
     batch_size= 128
-    sample_szie = 200
-    botname = "Ransomware"
     normal = "CTUNone"
     arch = "fsnet"
+    Botnets = [
+        "Tofsee",
+        "Dridex",
+        "Quakbot",
+        "TrickBot",
+        "Gozi"
+    ]
+    numbers = [2580, 2580, 1600, 690, 1250]
 
+    index = 0
+    botname = Botnets[index]
+    sample_szie = numbers[index]
     # model param
     param = {
-        "sequence_len": 30,
-        "vocab_size": 1600,
+        "sequence_len": 76,
+        "vocab_size": 1,
         "emb_dim": 128,
         "hidden_size": 64,
         "dec_gru": 64,
@@ -224,7 +236,8 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # pre the dataloader
-    c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    # c2data = C2Data(botname, number=sample_szie, sequenceLen=30)
+    c2data = MTACICFlowMeter(botname, number=sample_szie)
     train_valid_data, test_data = torch.utils.data.random_split(c2data, [train_size + valid_size, test_size])
     train_data, valid_data = torch.utils.data.random_split(train_valid_data, [train_size, valid_size])
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=False)
@@ -257,6 +270,6 @@ if __name__ == '__main__':
         'lr': lr,
         'batch_size': batch_size
     }
-    filename = "../../modelFile/target_{}_{}_{}.pkt".format(arch, botname, normal)
+    filename = "../../modelFile/target_mta_cicflowmeter_{}_{}.pkt".format(arch, botname)
     save_model(fsnet, adam, param, hyper, FPR,  filename)
 
